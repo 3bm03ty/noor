@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'unsafe-inline';">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Amiri', serif;
+      padding: 24px 28px;
+      margin: 0;
+      line-height: 1.9;
+      background: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      min-height: 100%;
+    }
+    .container { max-width: 520px; }
+    .ayah-ar {
+      font-size: 1.6rem;
+      font-weight: 400;
+      direction: rtl;
+      margin: 0 0 16px 0;
+      line-height: 2;
+    }
+    .ayah-en {
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+      direction: ltr;
+      margin: 0 0 12px 0;
+      opacity: 0.9;
+    }
+    .meta {
+      font-size: 0.85rem;
+      color: var(--vscode-descriptionForeground);
+      margin: 16px 0 20px 0;
+      direction: rtl;
+    }
+    .emoji { font-size: 1.2em; }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .actions button {
+      font-family: var(--vscode-font-family);
+      font-size: 13px;
+      padding: 6px 14px;
+      border: 1px solid var(--vscode-button-border, transparent);
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .actions button:hover {
+      background: var(--vscode-button-hoverBackground);
+    }
+    .actions button.secondary {
+      background: transparent;
+      color: var(--vscode-foreground);
+    }
+    .actions button.secondary:hover {
+      background: var(--vscode-toolbar-hoverBackground);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p class="ayah-ar" id="ayah-ar">{{AYAH_AR}}</p>
+    <p class="ayah-en" id="ayah-en">{{AYAH_EN}}</p>
+    <p class="meta" id="meta"{{META_STYLE}}>{{META}}</p>
+    <div class="actions">
+      <button data-action="copy">Copy</button>
+      <button data-action="next" class="secondary">Next Ayah</button>
+      <button data-action="dismiss" class="secondary">Dismiss</button>
+    </div>
+  </div>
+  <script>
+    (function() {
+      const vscode = acquireVsCodeApi();
+      document.querySelectorAll('button[data-action]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          vscode.postMessage({ action: btn.dataset.action });
+        });
+      });
+      window.addEventListener('message', function(event) {
+        const msg = event.data;
+        if (msg.type === 'update' && msg.ayah) {
+          document.getElementById('ayah-ar').textContent = msg.ayah.ar || '';
+          document.getElementById('ayah-en').textContent = msg.ayah.en || '';
+          var metaEl = document.getElementById('meta');
+          if (metaEl) {
+            if (msg.showSuraName !== false) {
+              var meta = msg.ayah.surahName || msg.ayah.surahEnglishName || '';
+              if (msg.ayah.numberInSurah) meta += ' (' + msg.ayah.numberInSurah + ')';
+              metaEl.innerHTML = meta ? '<span class="emoji">✨</span> ' + meta : '';
+              metaEl.style.display = '';
+            } else {
+              metaEl.style.display = 'none';
+            }
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

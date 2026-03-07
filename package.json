@@ -1,0 +1,110 @@
+{
+  "name": "noor",
+  "displayName": "Noor",
+  "description": "Get a verse (ayah) from the Quran during your coding session. Stay connected with the words of Allah.",
+  "version": "1.0.1",
+  "icon": "media/newIcon.png",
+  "publisher": "3bm03ty",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/3bm03ty/noor"
+  },
+  "engines": {
+    "vscode": "^1.61.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "quran",
+    "ayah",
+    "ayat",
+    "islam",
+    "verses",
+    "reminder"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:noor.showAyah",
+    "onCommand:noor.showNextAyah",
+    "onCommand:noor.dismissAyah"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "noor.showAyah",
+        "title": "Noor: Show Random Ayah"
+      },
+      {
+        "command": "noor.showNextAyah",
+        "title": "Noor: Show Next Ayah"
+      },
+      {
+        "command": "noor.dismissAyah",
+        "title": "Noor: Dismiss Ayah Popup"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "noor.showAyah",
+        "key": "ctrl+shift+k",
+        "mac": "cmd+shift+k"
+      },
+      {
+        "command": "noor.dismissAyah",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Noor",
+      "properties": {
+        "noor.language": {
+          "type": "string",
+          "description": "Display language for the verse",
+          "default": "Arabic",
+          "enum": [
+            "Arabic",
+            "English"
+          ],
+          "order": 1
+        },
+        "noor.repeatedEveryMinute": {
+          "type": "number",
+          "description": "Time between verse notifications (minutes)",
+          "default": 30,
+          "enum": [10, 15, 30, 60, 90, 120, 180],
+          "order": 2
+        },
+        "noor.showSuraName": {
+          "type": "boolean",
+          "description": "Show surah name and verse number",
+          "default": true,
+          "order": 3
+        },
+        "noor.popupPosition": {
+          "type": "string",
+          "description": "Where the popup appears",
+          "default": "center",
+          "enum": [
+            "center",
+            "sidebar"
+          ],
+          "order": 4
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node scripts/fetch-quran-data.js",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.61.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
