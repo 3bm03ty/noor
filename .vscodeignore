@@ -2,7 +2,6 @@
 .vscode-test/**
 src/**/*.map
 .gitignore
-node_modules/**
 scripts/**
 *.md
 !README.md

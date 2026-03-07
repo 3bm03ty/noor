@@ -2,7 +2,7 @@
   "name": "noor",
   "displayName": "Noor",
   "description": "Get a verse (ayah) from the Quran during your coding session. Stay connected with the words of Allah.",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "icon": "media/newIcon.png",
   "publisher": "3bm03ty",
   "repository": {
@@ -24,10 +24,7 @@
     "reminder"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:noor.showAyah",
-    "onCommand:noor.showNextAyah",
-    "onCommand:noor.dismissAyah"
+    "*"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -75,7 +72,7 @@
           "type": "number",
           "description": "Time between verse notifications (minutes)",
           "default": 30,
-          "enum": [10, 15, 30, 60, 90, 120, 180],
+          "enum": [1, 10, 15, 30, 60, 90, 120, 180],
           "order": 2
         },
         "noor.showSuraName": {
@@ -86,13 +83,47 @@
         },
         "noor.popupPosition": {
           "type": "string",
-          "description": "Where the popup appears",
+          "description": "Where the tab appears (when display mode is Tab)",
           "default": "center",
           "enum": [
             "center",
             "sidebar"
           ],
           "order": 4
+        },
+        "noor.displayMode": {
+          "type": "string",
+          "description": "How to display the verse: Popup shows a notification at the bottom; Tab opens a full panel",
+          "default": "popup",
+          "enum": [
+            "popup",
+            "tab"
+          ],
+          "order": 5
+        },
+        "noor.playAudio": {
+          "type": "boolean",
+          "description": "Auto-play recitation when ayah is displayed (tab mode only)",
+          "default": false,
+          "order": 6
+        },
+        "noor.reciter": {
+          "type": "string",
+          "description": "Reciter for audio playback",
+          "default": "ar.alafasy",
+          "enum": [
+            "ar.alafasy",
+            "ar.abdulbasitmurattal",
+            "ar.abdulsamad"
+          ],
+          "order": 7
+        },
+        "noor.audioBitrate": {
+          "type": "number",
+          "description": "Audio quality (kbps)",
+          "default": 64,
+          "enum": [64, 128, 192],
+          "order": 8
         }
       }
     }

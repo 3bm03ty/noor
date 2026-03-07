@@ -23,7 +23,11 @@ Get a verse (ayah) from the Quran during your coding session. Stay connected wit
 | `noor.language` | Display language (Arabic/English) | Arabic |
 | `noor.repeatedEveryMinute` | Interval between automatic reminders (10, 15, 30, 60, 90, 120, 180) | 30 |
 | `noor.showSuraName` | Show surah name and verse number | true |
-| `noor.popupPosition` | Where popup appears (center/sidebar) | center |
+| `noor.popupPosition` | Where the tab appears when display mode is Tab (center/sidebar) | center |
+| `noor.displayMode` | **popup** = notification at bottom (no tab); **tab** = full panel in editor | popup |
+| `noor.playAudio` | Auto-play recitation when ayah is displayed (tab mode only) | false |
+| `noor.reciter` | Reciter for audio (ar.alafasy, ar.abdulbasitmurattal, ar.abdulsamad) | ar.alafasy |
+| `noor.audioBitrate` | Audio quality in kbps (64, 128, 192) | 64 |
 
 ## Development
 

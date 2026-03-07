@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'unsafe-inline'; media-src https://cdn.islamic.network;">
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
@@ -71,19 +71,42 @@
     <p class="ayah-en" id="ayah-en">{{AYAH_EN}}</p>
     <p class="meta" id="meta"{{META_STYLE}}>{{META}}</p>
     <div class="actions">
+      <button data-action="play" class="secondary" id="play-btn">Play</button>
       <button data-action="copy">Copy</button>
       <button data-action="next" class="secondary">Next Ayah</button>
       <button data-action="dismiss" class="secondary">Dismiss</button>
     </div>
   </div>
+  <audio id="ayah-audio" style="display:none"></audio>
+  <script>var __INIT_AUDIO__ = {{INIT_AUDIO}};</script>
   <script>
     (function() {
       const vscode = acquireVsCodeApi();
+      var __init = typeof __INIT_AUDIO__ !== 'undefined' ? __INIT_AUDIO__ : {};
+      let audioConfig = { reciter: __init.reciter || 'ar.alafasy', bitrate: __init.bitrate || 64, ayahNumber: __init.ayahNumber || 1 };
+
+      function getAudioUrl() {
+        return 'https://cdn.islamic.network/quran/audio/' + audioConfig.bitrate + '/' + audioConfig.reciter + '/' + audioConfig.ayahNumber + '.mp3';
+      }
+
+      function playAudio() {
+        var num = audioConfig.ayahNumber;
+        if (!num || num < 1 || num > 6236) return;
+        var audio = document.getElementById('ayah-audio');
+        audio.src = getAudioUrl();
+        audio.play().catch(function() {});
+      }
+
       document.querySelectorAll('button[data-action]').forEach(function(btn) {
         btn.addEventListener('click', function() {
-          vscode.postMessage({ action: btn.dataset.action });
+          if (btn.dataset.action === 'play') {
+            playAudio();
+          } else {
+            vscode.postMessage({ action: btn.dataset.action });
+          }
         });
       });
+
       window.addEventListener('message', function(event) {
         const msg = event.data;
         if (msg.type === 'update' && msg.ayah) {
@@ -100,8 +123,14 @@
               metaEl.style.display = 'none';
             }
           }
+          if (msg.reciter) audioConfig.reciter = msg.reciter;
+          if (msg.bitrate) audioConfig.bitrate = msg.bitrate;
+          if (msg.ayah && msg.ayah.number) audioConfig.ayahNumber = msg.ayah.number;
+          if (msg.autoPlay) playAudio();
         }
       });
+
+      if (__init.autoPlay) playAudio();
     })();
   </script>
 </body>
