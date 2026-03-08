@@ -5,6 +5,10 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'unsafe-inline'; media-src https://cdn.islamic.network;">
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --ayah-font-size-ar: {{FONT_SIZE_AR}};
+      --ayah-font-size-en: {{FONT_SIZE_EN}};
+    }
     * { box-sizing: border-box; }
     body {
       font-family: 'Amiri', serif;
@@ -17,7 +21,7 @@
     }
     .container { max-width: 520px; }
     .ayah-ar {
-      font-size: 1.6rem;
+      font-size: var(--ayah-font-size-ar, 1.6rem);
       font-weight: 400;
       direction: rtl;
       margin: 0 0 16px 0;
@@ -25,7 +29,7 @@
     }
     .ayah-en {
       font-family: 'Lora', serif;
-      font-size: 1rem;
+      font-size: var(--ayah-font-size-en, 1rem);
       direction: ltr;
       margin: 0 0 12px 0;
       opacity: 0.9;
@@ -110,6 +114,8 @@
       window.addEventListener('message', function(event) {
         const msg = event.data;
         if (msg.type === 'update' && msg.ayah) {
+          if (msg.fontSizeAr) document.getElementById('ayah-ar').style.fontSize = msg.fontSizeAr;
+          if (msg.fontSizeEn) document.getElementById('ayah-en').style.fontSize = msg.fontSizeEn;
           document.getElementById('ayah-ar').textContent = msg.ayah.ar || '';
           document.getElementById('ayah-en').textContent = msg.ayah.en || '';
           var metaEl = document.getElementById('meta');

@@ -1,7 +1,9 @@
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const axios = require('axios');
+const player = require('play-sound')({ players: ['afplay', 'ffplay', 'mpg123', 'mpg321', 'cmdmp3', 'cvlc', 'aplay'] });
 
 const AYAH_MIN = 1;
 const AYAH_MAX = 6236;
@@ -15,6 +17,7 @@ const FALLBACK_AYAH = {
 };
 
 let panel = null;
+let playbackStatusBar = null;
 let bundledVerses = null;
 let timerHandle = null;
 let currentAyah = null;
@@ -77,12 +80,21 @@ async function getRandomAyah() {
   }
 }
 
+const FONT_SIZES = {
+  small: { ar: '1.2rem', en: '0.85rem' },
+  medium: { ar: '1.6rem', en: '1rem' },
+  large: { ar: '2rem', en: '1.2rem' },
+  'extra-large': { ar: '2.4rem', en: '1.4rem' }
+};
+
 function getPopupHtml(ayah, autoPlayOverride) {
   const showSuraName = vscode.workspace.getConfiguration('noor').get('showSuraName');
   const reciter = vscode.workspace.getConfiguration('noor').get('reciter') || 'ar.alafasy';
   const bitrate = vscode.workspace.getConfiguration('noor').get('audioBitrate') || 64;
   const playAudio = autoPlayOverride === true || vscode.workspace.getConfiguration('noor').get('playAudio') || false;
   const ayahNumber = ayah.number || 1;
+  const fontSize = vscode.workspace.getConfiguration('noor').get('fontSize') || 'medium';
+  const sizes = FONT_SIZES[fontSize] || FONT_SIZES.medium;
 
   const ayahAr = (ayah.ar || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const ayahEn = (ayah.en || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -105,8 +117,41 @@ function getPopupHtml(ayah, autoPlayOverride) {
     .replace('{{AYAH_EN}}', ayahEn)
     .replace('{{META}}', metaContent)
     .replace('{{META_STYLE}}', metaStyle)
-    .replace('{{INIT_AUDIO}}', initAudio);
+    .replace('{{INIT_AUDIO}}', initAudio)
+    .replace('{{FONT_SIZE_AR}}', sizes.ar)
+    .replace('{{FONT_SIZE_EN}}', sizes.en);
   return html;
+}
+
+function playAyahInBackground(ayah) {
+  const reciter = vscode.workspace.getConfiguration('noor').get('reciter') || 'ar.alafasy';
+  const bitrate = vscode.workspace.getConfiguration('noor').get('audioBitrate') || 64;
+  const ayahNumber = ayah.number || 1;
+  if (ayahNumber < 1 || ayahNumber > 6236) return;
+
+  const url = `https://cdn.islamic.network/quran/audio/${bitrate}/${reciter}/${ayahNumber}.mp3`;
+  const tempFile = path.join(os.tmpdir(), `noor-${Date.now()}-${ayahNumber}.mp3`);
+
+  axios.get(url, { responseType: 'arraybuffer', timeout: 15000 })
+    .then((res) => {
+      fs.writeFileSync(tempFile, res.data);
+      playbackStatusBar.text = '$(loading~spin) Playing recitation...';
+      playbackStatusBar.show();
+      const opts = { ffplay: ['-nodisp', '-autoexit', '-loglevel', 'quiet'] };
+      player.play(tempFile, opts, (err) => {
+        try { fs.unlinkSync(tempFile); } catch (_) {}
+        if (playbackStatusBar) {
+          playbackStatusBar.hide();
+        }
+        if (err && !err.killed) {
+          vscode.window.showInformationMessage('Noor: Could not play audio. Install ffmpeg (ffplay) or mpg123 for background playback.');
+        }
+      });
+    })
+    .catch(() => {
+      if (playbackStatusBar) playbackStatusBar.hide();
+      vscode.window.showInformationMessage('Noor: Could not load audio.');
+    });
 }
 
 function getDisplayMode() {
@@ -134,19 +179,12 @@ async function showAyahAsPopup(ayah, skipIfUnfocused = false) {
 
     try {
       const choice = await Promise.race([
-        vscode.window.showInformationMessage(
-          message,
-          { modal: false },
-          'Play',
-          'Copy',
-          'Next Ayah',
-          'Open in Tab'
-        ),
+        vscode.window.showInformationMessage(message, { modal: false }, 'Play', 'Copy', 'Next Ayah', 'Open in Tab'),
         new Promise((resolve) => setTimeout(() => resolve(undefined), 30000))
       ]);
 
       if (choice === 'Play') {
-        showAyahPanel(ayah, true);
+        playAyahInBackground(ayah);
       } else if (choice === 'Copy') {
         await vscode.env.clipboard.writeText(text);
         vscode.window.showInformationMessage('Ayah copied to clipboard');
@@ -176,13 +214,17 @@ function showAyahPanel(ayah, autoPlayOverride) {
     const reciter = vscode.workspace.getConfiguration('noor').get('reciter') || 'ar.alafasy';
     const bitrate = vscode.workspace.getConfiguration('noor').get('audioBitrate') || 64;
     const shouldAutoPlay = autoPlayOverride === true || vscode.workspace.getConfiguration('noor').get('playAudio') || false;
+    const fontSize = vscode.workspace.getConfiguration('noor').get('fontSize') || 'medium';
+    const sizes = FONT_SIZES[fontSize] || FONT_SIZES.medium;
     panel.webview.postMessage({
       type: 'update',
       ayah,
       showSuraName: vscode.workspace.getConfiguration('noor').get('showSuraName'),
       reciter,
       bitrate,
-      autoPlay: shouldAutoPlay
+      autoPlay: shouldAutoPlay,
+      fontSizeAr: sizes.ar,
+      fontSizeEn: sizes.en
     });
     return;
   }
@@ -211,12 +253,16 @@ function showAyahPanel(ayah, autoPlayOverride) {
       currentAyah = nextAyah;
       const reciter = vscode.workspace.getConfiguration('noor').get('reciter') || 'ar.alafasy';
       const bitrate = vscode.workspace.getConfiguration('noor').get('audioBitrate') || 64;
+      const fontSize = vscode.workspace.getConfiguration('noor').get('fontSize') || 'medium';
+      const sizes = FONT_SIZES[fontSize] || FONT_SIZES.medium;
       panel.webview.postMessage({
         type: 'update',
         ayah: nextAyah,
         showSuraName: vscode.workspace.getConfiguration('noor').get('showSuraName'),
         reciter,
-        bitrate
+        bitrate,
+        fontSizeAr: sizes.ar,
+        fontSizeEn: sizes.en
       });
     } else if (msg.action === 'dismiss') {
       if (panel) {
@@ -245,10 +291,14 @@ async function showNextAyah() {
   if (panel && getDisplayMode() === 'tab') {
     const ayah = await getRandomAyah();
     currentAyah = ayah;
+    const fontSize = vscode.workspace.getConfiguration('noor').get('fontSize') || 'medium';
+    const sizes = FONT_SIZES[fontSize] || FONT_SIZES.medium;
     panel.webview.postMessage({
       type: 'update',
       ayah,
-      showSuraName: vscode.workspace.getConfiguration('noor').get('showSuraName')
+      showSuraName: vscode.workspace.getConfiguration('noor').get('showSuraName'),
+      fontSizeAr: sizes.ar,
+      fontSizeEn: sizes.en
     });
   } else {
     await showAyah();
@@ -281,6 +331,9 @@ function startTimer() {
 
 function activate(context) {
   try {
+    playbackStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    context.subscriptions.push(playbackStatusBar);
+
     context.subscriptions.push(
       vscode.commands.registerCommand('noor.showAyah', showAyah),
       vscode.commands.registerCommand('noor.showNextAyah', showNextAyah),

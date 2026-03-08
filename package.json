@@ -24,7 +24,10 @@
     "reminder"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished",
+    "onCommand:noor.showAyah",
+    "onCommand:noor.showNextAyah",
+    "onCommand:noor.dismissAyah"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -124,6 +127,18 @@
           "default": 64,
           "enum": [64, 128, 192],
           "order": 8
+        },
+        "noor.fontSize": {
+          "type": "string",
+          "description": "Font size of the ayah text (tab/panel only)",
+          "default": "medium",
+          "enum": [
+            "small",
+            "medium",
+            "large",
+            "extra-large"
+          ],
+          "order": 9
         }
       }
     }
@@ -136,6 +151,7 @@
     "@types/vscode": "^1.61.0"
   },
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "play-sound": "^1.1.6"
   }
 }
