@@ -2,7 +2,7 @@
   "name": "noor",
   "displayName": "Noor",
   "description": "Get a verse (ayah) from the Quran during your coding session. Stay connected with the words of Allah.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "icon": "media/newIcon.png",
   "publisher": "3bm03ty",
   "repository": {

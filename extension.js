@@ -191,7 +191,7 @@ async function showAyahAsPopup(ayah, skipIfUnfocused = false) {
       } else if (choice === 'Next Ayah') {
         popupVisible = false;
         const nextAyah = await getRandomAyah();
-        await showAyah(nextAyah, false);
+        showAyah(nextAyah, false);
       } else if (choice === 'Open in Tab') {
         showAyahPanel(ayah);
       }
